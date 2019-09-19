@@ -15,7 +15,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
     //Game Balance
     let coinAmount = 25
-    let timeAmount = 10
+    let timeAmount = 300
     //
     
     @IBOutlet weak var titleLabelOutlet: UILabel!
