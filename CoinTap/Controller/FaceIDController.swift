@@ -51,7 +51,7 @@ extension ViewController {
                         // Move to the main thread because a state update triggers UI changes.
                         DispatchQueue.main.async { [unowned self] in
                             self.state = .loggedin
-                            self.play()
+//                            self.play()
                         }
                         
                     } else {

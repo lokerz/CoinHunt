@@ -14,11 +14,11 @@ import LocalAuthentication
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     //Game Balance
-    let coinAmount = 25
-    let timeAmount = 300
+    let timeAmount = 180
+    let coinAmount = 40
     //
     
-    @IBOutlet weak var titleLabelOutlet: UILabel!
+    @IBOutlet weak var commandLabelOutlet: UILabel!
     @IBOutlet weak var playButtonOutlet: UIButton!
     @IBOutlet var sceneView: ARSCNView!
     @IBOutlet weak var scoreLabel: UILabel!
@@ -52,7 +52,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         super.viewWillAppear(animated)
         setupLocalAuthentication()
         setupScore()
-        setupTitle()
+        setupCommandText()
         setupTimer()
         setupPlayButton()
         setupScene()
@@ -65,23 +65,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         sceneView.session.pause()
     }
     
-    func setupTitle(){
-        titleLabelOutlet.isHidden = false
-        titleLabelOutlet.layer.cornerRadius = titleLabelOutlet.frame.width / 2
-        titleLabelOutlet.layer.borderWidth = 12
-        titleLabelOutlet.layer.borderColor = #colorLiteral(red: 0.8, green: 0.2470588235, blue: 0.003921568627, alpha: 1)
-        titleLabelOutlet.layer.backgroundColor = #colorLiteral(red: 1, green: 0.9843137255, blue: 0, alpha: 1)
-        titleLabelOutlet.layer.masksToBounds = true
-        titleLabelOutlet.font = UIFont(name: "04b_19", size: 90)
-        view.sendSubviewToBack(titleLabelOutlet)
-    }
-    
     func setupPlayButton(){
         playButtonOutlet.isHidden = false
-        playButtonOutlet.layer.cornerRadius = 0
+        playButtonOutlet.layer.cornerRadius = playButtonOutlet.frame.width/2
         playButtonOutlet.layer.borderWidth = 12
         playButtonOutlet.layer.borderColor = #colorLiteral(red: 0.8, green: 0.2470588235, blue: 0.003921568627, alpha: 1)
-        playButtonOutlet.titleLabel?.font = UIFont(name: "04b_19", size: 45)
+        playButtonOutlet.titleLabel?.font = UIFont(name: "04b_19", size: 90)
+        playButtonOutlet.titleLabel?.numberOfLines = 0
+        playButtonOutlet.titleLabel?.textAlignment = .center
         playButtonOutlet.transform = CGAffineTransform(translationX: 0, y: 0)
         UIView.animate(withDuration: 1, delay: 0, options: [.repeat, .autoreverse, .allowUserInteraction], animations: {
             self.playButtonOutlet.transform = CGAffineTransform(translationX: 0, y: 10)
@@ -90,18 +81,66 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         })
     }
     
-    
+    func setupCommandText(){
+        commandLabelOutlet.isHidden = false
+        commandLabelOutlet.font = UIFont(name: "04b_19", size: 30)
+    }
 
     func setupScene(){
+        sceneView.delegate = self
+        sceneView.session.delegate = self
+
         let configuration = ARWorldTrackingConfiguration()
-        configuration.planeDetection = .horizontal
+//        configuration.planeDetection = [.horizontal, .vertical]
+        configuration.planeDetection = .vertical
+//        configuration.planeDetection = .horizontal
+
+        
+        configuration.isLightEstimationEnabled = true
+        if #available(iOS 13.0, *) {
+            configuration.frameSemantics.insert(.personSegmentationWithDepth)
+        } else {
+            // Fallback on earlier versions
+        }
+
+//        sceneView.debugOptions = .showFeaturePoints
         
         sceneView.automaticallyUpdatesLighting = true
         sceneView.autoenablesDefaultLighting = true
         
-        sceneView.session.delegate = self
         sceneView.session.run(configuration)
     }
+//    
+//    func setupWalls(anchor : ARPlaneAnchor)  -> SCNNode{
+//        let occlusionMaterial = SCNMaterial()
+//        occlusionMaterial.isDoubleSided = true
+//        //Invicible Maaterial
+//        occlusionMaterial.colorBufferWriteMask = []
+//        occlusionMaterial.readsFromDepthBuffer = true
+//        occlusionMaterial.writesToDepthBuffer = true
+//        //
+////        occlusionMaterial.diffuse.contents = UIColor.blue
+////        occlusionMaterial.specular.contents = UIColor.black
+////        occlusionMaterial.lightingModel = .phong
+//        
+//        let node = SCNNode()
+//        node.name = "wall"
+//        node.geometry = SCNPlane(width: CGFloat(anchor.extent.x), height: CGFloat(anchor.extent.z))
+//        node.eulerAngles = SCNVector3(1.5708, 0, 0)
+//        node.geometry?.firstMaterial = occlusionMaterial
+//        node.position = SCNVector3Make(anchor.center.x, anchor.center.y, anchor.center.z)
+//        node.renderingOrder = -100
+//        print(#function, anchor.extent.x, anchor.extent.z)
+//        return node
+//    }
+//    
+//    func removeWalls(){
+//        sceneView.scene.rootNode.enumerateChildNodes { (node, _) in
+//            if node.name == "wall" {
+//                node.removeFromParentNode()
+//            }
+//        }
+//    }
     
     func setupScore(){
         score = 0
@@ -117,7 +156,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     }
     
     @IBAction func playButtonAction(_ sender: Any) {
-        checkFaceID()
+        play()
+//        checkFaceID()
     }
     
     func play(){
@@ -129,12 +169,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     func hideUI(){
         playButtonOutlet.isHidden = true
-        titleLabelOutlet.isHidden = true
+        commandLabelOutlet.isHidden = true
         scoreLabel.isHidden = false
     }
     
     func spawnCoins(){
-        spawnerNode = CoinSpawner().spawnCoins(sceneView: sceneView, coinAmount: coinAmount)
+        spawnerNode = CoinSpawner().spawnCoins(coinAmount: coinAmount)
+        print(spawnerNode.renderingOrder)
         sceneView.scene.rootNode.addChildNode(spawnerNode)
     }
     
@@ -179,9 +220,24 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
     }
     
-    func renderer(_ renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
-        
-    }
-    
+//    func renderer(_ renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
+//
+//    }
+//
+//    func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+//        guard let anchorPlane = anchor as? ARPlaneAnchor else {return}
+//        node.addChildNode(setupWalls(anchor: anchorPlane))
+//    }
+//
+//    func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
+//        guard let anchorPlane = anchor as? ARPlaneAnchor else {return}
+//        removeWalls()
+//        node.addChildNode(setupWalls(anchor: anchorPlane))
+//    }
+//
+//    func renderer(_ renderer: SCNSceneRenderer, didRemove node: SCNNode, for anchor: ARAnchor) {
+//        guard let anchorPlane = anchor as? ARPlaneAnchor else {return}
+////        removeWalls(anchor: anchorPlane)
+//    }
 }
 

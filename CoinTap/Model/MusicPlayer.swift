@@ -12,7 +12,7 @@ import AVFoundation
 
 class MusicPlayer :  NSObject{
     static let instance = MusicPlayer()
-    var audioPlayer = AVAudioPlayer()
+    var audioPlayer : AVAudioPlayer?
 
     func playSound(){
         let sound = Bundle.main.path(forResource: "coin", ofType: "mp3")
@@ -21,7 +21,7 @@ class MusicPlayer :  NSObject{
         } catch {
             print(error)
         }
-        audioPlayer.prepareToPlay()
-        audioPlayer.play()
+        audioPlayer?.prepareToPlay()
+        audioPlayer?.play()
     }
 }

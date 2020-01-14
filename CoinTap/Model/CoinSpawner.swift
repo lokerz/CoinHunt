@@ -13,14 +13,18 @@ import GLKit
 
 class CoinSpawner {
     let spawnerNode = SCNNode()
-    let rangeRadius : Float = 20
-    let rangeHeight : Int = 1
+    let rangeRadius : Float = 15
+    let rangeHeight : Float = 0.5
     let positionOffset : Float = 3
     
-    func spawnCoins(sceneView : ARSCNView, coinAmount : Int) -> SCNNode{
-        for _ in 0...coinAmount - 1{
+    func spawnCoins(coinAmount : Int) -> SCNNode{
+        for i in 0...coinAmount - 1{
             let coin = Coin().getCoin()
-            randomizePosition(coin: coin)
+            if i > 0 {
+                randomizePosition(coin: coin)
+            } else {
+                coin.position = SCNVector3Make(0, 0, -2)
+            }
             spawnerNode.addChildNode(coin)
         }
         return spawnerNode
@@ -28,9 +32,9 @@ class CoinSpawner {
     
     func randomizePosition(coin : SCNNode){
         let x = Float.random(in: -rangeRadius...rangeRadius)
-        let y = Int.random(in: -rangeHeight...rangeHeight)
+        let y = Float.random(in: -rangeHeight...rangeHeight)
         let z = Float.random(in: -rangeRadius...rangeRadius)
-        coin.position = SCNVector3(x, Float(y), z)
+        coin.position = SCNVector3(x, y, z)
         if x < positionOffset && x > -positionOffset {
             if z < positionOffset && z > -positionOffset {
                 randomizePosition(coin: coin)
@@ -40,9 +44,9 @@ class CoinSpawner {
     }
     
     func validatePosition(){
-        if spawnerNode.childNodes.count > 1 {
-            for i in 0...spawnerNode.childNodes.count - 1 {
-                for j in 0...spawnerNode.childNodes.count - 1 {
+        if spawnerNode.childNodes.count > 2 {
+            for i in 1...spawnerNode.childNodes.count - 1 {
+                for j in 1...spawnerNode.childNodes.count - 1 {
                     if i != j {
                         let pos1 = SCNVector3ToGLKVector3(spawnerNode.childNodes[i].position)
                         let pos2 = SCNVector3ToGLKVector3(spawnerNode.childNodes[j].position)
